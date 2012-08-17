@@ -2,7 +2,8 @@ package Genome::Model::Tools::Music;
 use strict;
 use warnings;
 use Genome;
-our $VERSION = '0.02';
+#bugfix version needs to be encoded as extra precision after the decimal point ie: .0401
+our $VERSION = '0.04';
 
 class Genome::Model::Tools::Music {
     is => ['Command::Tree'],

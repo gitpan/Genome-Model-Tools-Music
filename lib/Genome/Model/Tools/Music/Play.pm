@@ -23,24 +23,19 @@ class Genome::Model::Tools::Music::Play {
             doc => 'Path to reference sequence in FASTA format'
         },
         output_dir => {
-            is => 'Text',
+            is => 'Text', is_output => 1,
             doc => 'Directory where output files and subdirectories will be written',
-            is_output => 1,
         },
         maf_file => {
             is => 'Text',
-            doc => 'List of mutations using TCGA MAF specifications v2.2'
-        },
-        genetic_data_type => {
-            is => 'Text',
-            doc => 'Data in matrix file must be either "gene" or "variant" type data',
+            doc => 'List of mutations using TCGA MAF specifications v2.3'
         },
         pathway_file => {
             is => 'Text',
             doc => 'Tab-delimited file of pathway information',
         },
-    ],
-    has_optional_input => [
+        ],
+        has_optional_input => [
         numeric_clinical_data_file => {
             is => 'Text',
             doc => 'Table of samples (y) vs. numeric clinical data category (x)',
@@ -49,18 +44,43 @@ class Genome::Model::Tools::Music::Play {
             is => 'Text',
             doc => 'Table of samples (y) vs. categorical clinical data category (x)',
         },
+        numerical_data_test_method => {
+            is => 'Text', default => 'cor',
+            doc => "Either 'cor' for Pearson Correlation or 'wilcox' for the Wilcoxon Rank-Sum Test for numerical clinical data.",
+        },
+        glm_model_file => {
+            is => 'Text',
+            doc => 'File outlining the type of model, response variable, covariants, etc. for the GLM analysis. (See DESCRIPTION).',
+        },
+        glm_clinical_data_file => {
+            is => 'Text',
+            doc => 'Clinical traits, mutational profiles, other mixed clinical data (See DESCRIPTION).',
+        },
+        use_maf_in_glm => {
+            is => 'Boolean', default => 0,
+            doc => 'Set this flag to use the variant matrix created from the MAF file as variant input to GLM analysis.',
+        },
         omimaa_dir => {
             is => 'Path',
             doc => 'omim amino acid mutation database folder',
+            default => Genome::Sys->dbpath('omim', 'latest'),
         },
         cosmic_dir => {
             is => 'Path',
             doc => 'cosmic amino acid mutation database folder',
+            default => Genome::Sys->dbpath('cosmic', 'latest'),
         },
         verbose => {
-            is => 'Boolean',
+            is => 'Boolean', default => 1,
             doc => 'turn on to display larger working output',
-            default => 1,
+        },
+        clinical_correlation_matrix_file => {
+            is => 'Text',
+            doc => 'Optionally store the sample-vs-gene matrix used internally during calculations.',
+        },
+        mutation_matrix_file => {
+            is => 'Text',
+            doc => 'Optionally store the sample-vs-gene matrix used during calculations.',
         },
         permutations => {
             is => 'Number',
@@ -68,20 +88,19 @@ class Genome::Model::Tools::Music::Play {
         },
         normal_min_depth => {
             is => 'Integer',
-            doc => "The minimum read depth to consider a Normal BAM base as covered",
+            doc => 'The minimum read depth to consider a Normal BAM base as covered',
         },
         tumor_min_depth => {
             is => 'Integer',
-            doc => "The minimum read depth to consider a Tumor BAM base as covered",
+            doc => 'The minimum read depth to consider a Tumor BAM base as covered',
         },
         min_mapq => {
             is => 'Integer',
-            doc => "The minimum mapping quality of reads to consider towards read depth counts",
+            doc => 'The minimum mapping quality of reads to consider towards read depth counts',
         },
         show_skipped => {
-            is => 'Boolean',
-            doc => "Report each skipped mutation, not just how many",
-            default => 0,
+            is => 'Boolean', default => 0,
+            doc => 'Report each skipped mutation, not just how many',
         },
         genes_to_ignore => {
             is => 'Text',
@@ -95,30 +114,72 @@ class Genome::Model::Tools::Music::Play {
             is => 'Text',
             doc => 'Maximum AA distance between 2 mutations',
         },
+        bmr_modifier_file => {
+            is => 'Text',
+            doc => 'Tab delimited list of values per gene that modify BMR before testing [gene_name bmr_modifier]',
+        },
+        skip_low_mr_genes => {
+            is => 'Boolean', default => 1,
+            doc => "Skip testing genes with MRs lower than the background MR"
+        },
         max_fdr => {
-            is => 'Number',
+            is => 'Number', default => 0.20,
             doc => 'The maximum allowed false discovery rate for a gene to be considered an SMG',
+        },
+        genetic_data_type => {
+            is => 'Text',
+            doc => 'Data in matrix file must be either "gene" or "variant" type data',
         },
         wu_annotation_headers => {
             is => 'Boolean',
             doc => 'Use this to default to wustl annotation format headers',
         },
+        bmr_groups => {
+            is => 'Integer', default => 1,
+            doc => 'Number of clusters of samples with comparable BMRs',
+        },
+        separate_truncations => {
+            is => 'Boolean', default => 0,
+            doc => 'Group truncational mutations as a separate category',
+        },
+        merge_concurrent_muts => {
+            is => 'Boolean', default => 0,
+            doc => 'Multiple mutations of a gene in the same sample are treated as 1',
+        },
         skip_non_coding => {
-            is => 'Boolean',
+            is => 'Boolean', default => 1,
             doc => 'Skip non-coding mutations from the provided MAF file',
-            default_value => 1,
         },
         skip_silent => {
-            is => 'Boolean',
+            is => 'Boolean', default => 1,
             doc => 'Skip silent mutations from the provided MAF file',
-            default_value => 1,
         },
         min_mut_genes_per_path => {
-            is => 'Number',
+            is => 'Integer', default => 1,
             doc => 'Pathways with fewer mutated genes than this will be ignored',
         },
-    ],
-    has_calculated_optional => [
+        processors => {
+            is => 'Integer', default => 1,
+            doc => "Number of processors to use in SMG (requires 'foreach' and 'doMC' R packages)",
+        },
+        aa_range => {
+            is => 'Integer', default => 2,
+            doc => "Set how close a 'near' match is when searching for amino acid near hits",
+        },
+        nuc_range => {
+            is => 'Integer', default => 5,
+            doc => "Set how close a 'near' match is when searching for nucleotide position near hits",
+        },
+        reference_build => {
+            is => 'Text', default => 'Build37',
+            doc => 'Put either "Build36" or "Build37"',
+        },
+        show_known_hits => {
+            is => 'Boolean', default => 1,
+            doc => "When a finding is novel, show known AA in that gene",
+        },
+        ],
+        has_calculated_optional => [
         gene_covg_dir => {
             calculate_from => ['output_dir'],
             calculate => q{ $output_dir . '/gene_covgs'; },
@@ -129,28 +190,28 @@ class Genome::Model::Tools::Music::Play {
         },
         gene_list => {
             is => 'Text',
-            doc => "List of genes to test in B<genome-music-mutation-relation>(1), typically SMGs. (Uses output from running B<genome-music-smg>(1).)",
+            doc => 'List of genes to test in B<genome-music-mutation-relation>(1), typically SMGs. (Uses output from running B<genome-music-smg>(1).)',
             calculate_from => ['output_dir'],
             calculate => q{ $output_dir . '/smg'; },
         },
-    ],
-    has_constant => [
+        input_clinical_correlation_matrix_file => {
+            is => 'Text', is_optional => 1,
+            doc => "Instead of calculating this from the MAF, input the sample-vs-gene matrix used internally during calculations.",
+        },
+        ],
+        has_constant => [
         cmd_list_file => { #If a workflow version of this tool is written, these parameters might be more useful
-            is => 'Text',
-            default_value => undef,
-            is_optional => 1,
+            is => 'Text', default_value => undef, is_optional => 1,
         },
         cmd_prefix => {
-            is => 'Text',
-            default_value => undef,
-            is_optional => 1,
+            is => 'Text', default_value => undef, is_optional => 1,
         },
-    ],
-    doc => 'Run the full suite of MuSiC tools sequentially.',
-};
+        ],
+        doc => 'Run the full suite of MuSiC tools sequentially.',
+    };
 
-sub help_synopsis {
-    return <<EOS
+    sub help_synopsis {
+        return <<EOS
 This tool takes as parameters all the information required to run the individual tools. An example usage is:
 
  ... music play \\
@@ -163,24 +224,24 @@ This tool takes as parameters all the information required to run the individual
         --roi-file input/all_coding_regions.bed \\
         --genetic-data-type gene
 EOS
-}
+    }
 
-sub help_detail {
-    return <<EOS
+    sub help_detail {
+        return <<EOS
 This command can be used to run all of the MuSiC analysis tools on a set of data. Please see the individual tools for further description of the parameters.
 EOS
-}
+    }
 
-sub _doc_credits {
-    return "Please see the credits for B<genome-music>(1).";
-}
+    sub _doc_credits {
+        return "Please see the credits for B<genome-music>(1).";
+    }
 
-sub _doc_authors {
-    return " Thomas B. Mooney, M.S.";
-}
+    sub _doc_authors {
+        return " Thomas B. Mooney, M.S.";
+    }
 
-sub _doc_see_also {
-    return <<EOS
+    sub _doc_see_also {
+        return <<EOS
 B<genome-music>(1),
 B<genome-music-path-scan>(1),
 B<genome-music-smg>(1),

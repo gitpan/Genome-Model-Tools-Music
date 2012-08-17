@@ -14,3 +14,8 @@
 ^cmd-bindoc
 ^i
 ^.modulebuildrc
+^gmt-web
+rebuild-debian-install
+galaxy.xml
+^MYMETA\.json$
+t/Music.t # floating point causes this to fail on other machines

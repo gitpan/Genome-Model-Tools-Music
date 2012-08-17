@@ -64,21 +64,22 @@ EOS
 my $build = $class->new(
   module_name => 'Genome::Model::Tools::Music',
   license => 'lgpl',
-  dist_version => '0.02',
   dist_abstract => 'find mutations of significance in cancer',
   install_path => { 't' => $Config{vendorlib} . "/Genome/Model/Tools" },
   build_requires => {
-    'UR' => '0.33',
     'Genome' => '0.06',
+    'Text::CSV_XS' => '',
+    'Regexp::Common' => '',
+    'Statistics::Distributions' => '',
   },
   requires => {
     'Genome' => '0.06',
     'Text::CSV_XS' => '',
+    'Regexp::Common' => '',
     'Statistics::Distributions' => '',
   },
   bindoc_dirs => ['cmd-bindoc'],
 );
 
-$build->add_build_element('t');
 $build->add_build_element('R');
 $build->create_build_script;
